@@ -5,6 +5,9 @@ export CLI_WORKDIR=$(cd $(dirname $0) && pwd)
 
 source $CLI_WORKDIR/lib/common
 
+# Load the .env file
+importFile $CLI_WORKDIR/.env
+
 cli_help() {
     cli_version
     cli_usage
@@ -33,7 +36,7 @@ Global options:
 
 Available commands:
   show      Show 
-
+  test      Test a given handler locally 
   *         Help
 "
     exit 1
@@ -59,7 +62,9 @@ case "$1" in
 show | s)
     "$CLI_WORKDIR/commands/show" "${@:2}"
     ;;
-
+test)
+    "$CLI_WORKDIR/commands/test" "${@:2}"
+    ;;
 *)
     cli_usage
     ;;

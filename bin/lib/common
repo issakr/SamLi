@@ -3,21 +3,24 @@
 cli_log() {
     script_name=${0##*/}
     timestamp=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
-    echo "== $script_name $timestamp == $1"
+    echo "== $script_name $timestamp 🕖 == $1"
 }
-function echoerror() { # $1 = string
+echoerror() { # $1 = string
     COLOR='\033[31m'
     NC='\033[0m'
     printf "${COLOR}$1${NC}\n" >&2
 }
-function importFile() {
+importFile() {
     local File=$1
     if [ -s $File ]; then
         source $File
     elif [ -e $File ]; then
         echo "$File exists but is empty."
     else
-        echoerror "$File does not exist."
-        return 1
+        error "$File does not exist."
     fi
+}
+function error() {
+    echoerror "Error: $1"
+    exit 1
 }

@@ -1,0 +1,22 @@
+#!/usr/bin/env bash
+
+set -e
+source $CLI_WORKDIR/lib/common
+
+if [ $# -eq 0 ]; then
+    error "No handler name provided ❌"
+fi
+
+LAMBDA_FOLDERNAME=$1
+PROJECT_PATH="$GROUP_PROJECTS_PATH/time-value-account/cdk"
+HANDLERS_PATH="src/handler"
+LAMBDA_PATH="$PROJECT_PATH/$HANDLERS_PATH/$LAMBDA_FOLDERNAME"
+
+cli_log "Testing: $LAMBDA_FOLDERNAME located in: $LAMBDA_PATH"
+
+cd $PROJECT_PATH
+npm run build-ci && ENV=$ENV cdk synth -o cdk-$ENV.out --quiet
+
+ls
+
+sam local invoke $LAMBDA_FOLDERNAME -e $LAMBDA_PATH/event.json -n $LAMBDA_PATH/local.json
