@@ -1,0 +1,1 @@
+# config file instead of dotenv
