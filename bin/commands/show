@@ -1,0 +1,37 @@
+#!/usr/bin/env bash
+set -e
+
+cli_help_show() {
+    local cli_name=${0##*/}
+    echo "Command: $cli_name"
+    echo "Description: $cli_name is a command to show ..."
+    cli_usage_show
+    exit 1
+}
+
+cli_usage_show() {
+    local cli_name=${0##*/}
+    echo "
+Usage: $cli_name <functions>
+
+Available functions:
+  syspath   Shows system variables in lines
+  *         Help
+"
+    exit 1
+}
+showPATH() {
+    oldifs="$IFS" #store old internal field separator
+    IFS=:         #specify a new internal field separator
+    for DIR in $PATH; do echo $DIR; done
+    IFS="$oldifs" #restore old internal field separator
+}
+
+case "$1" in
+syspath)
+    showPATH
+    ;;
+*)
+    cli_help_show
+    ;;
+esac
