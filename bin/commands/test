@@ -14,7 +14,8 @@ LAMBDA_PATH="$PROJECT_PATH/$HANDLERS_PATH/$LAMBDA_FOLDERNAME"
 
 cli_log "Testing: $LAMBDA_FOLDERNAME located in: $LAMBDA_PATH"
 
-cd $PROJECT_PATH
+cd ~/$PROJECT_PATH
+
 npm run build-ci && ENV=$ENV cdk synth -o cdk-$ENV.out --quiet
 
 sam local invoke $LAMBDA_FOLDERNAME -e $LAMBDA_PATH/event.json -n $LAMBDA_PATH/local.json
