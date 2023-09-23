@@ -6,7 +6,7 @@ export CLI_WORKDIR=$(cd $(dirname $0) && pwd)
 source $CLI_WORKDIR/lib/common
 
 # Load the .env file
-importFile $CLI_WORKDIR/.env
+importFile $CLI_WORKDIR/../.conf
 
 cli_help() {
     cli_version
@@ -36,7 +36,7 @@ Global options:
 
 Available commands:
   show      Show 
-  test      Test a given handler locally 
+  test      Locally test a given handler 
   *         Help
 "
     exit 1
@@ -51,7 +51,7 @@ while getopts "hv" flag; do
     v) # display version
         cli_version
         ;;
-    *)
+    ?)
         cli_help
         ;;
     esac
