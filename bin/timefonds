@@ -35,7 +35,6 @@ Global options:
   -v,   for version
 
 Available commands:
-  show      Show 
   test      Locally test a given handler 
   *         Help
 "
@@ -59,9 +58,6 @@ done
 
 case "$1" in
 #  ${@:2} essentially refers to all the command-line arguments except for the first one,
-show | s)
-    "$CLI_WORKDIR/commands/show" "${@:2}"
-    ;;
 test)
     "$CLI_WORKDIR/commands/test" "${@:2}"
     ;;
