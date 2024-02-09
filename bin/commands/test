@@ -25,9 +25,11 @@ cli_usage() {
 Usage: $cli_name [-e|--env <TEST_ENV> <functionName>]
 
 Available options:
-   -e | --env,   for the test environment
+   -e | --env,      for the test environment
+        --event,    provide event
    -n | --no-build, skip building the template
-   -h | --help,  for help
+   -d | --debug,    debug features
+   -h | --help,     for help
 "
     exit 1
 }
@@ -38,12 +40,20 @@ POSITIONAL_ARGS=()
 # Loop through command-line arguments
 while [[ $# -gt 0 ]]; do
     case $1 in
+    --event)
+        EVENT="$2"
+        shift 2 # skip both the argument and its value
+        ;;
     -e | --env)
         TEST_ENV="$2"
         shift 2 # skip both the argument and its value
         ;;
     -n | --no-build)
         NO_BUILD=true
+        shift # skip the argument
+        ;;
+    -d | --debug)
+        DEBUG_FLAG="--debug"
         shift # skip the argument
         ;;
     -h | --help)
@@ -77,10 +87,24 @@ fi
 # Check if test environment is missing
 if [ -z "${TEST_ENV}" ]; then
     if [ -n "$ENV" ]; then
-        echo "Using $ENV from .env file"
+
         TEST_ENV=$ENV
-        echo "$TEST_ENV"
+
+        # Prompt the user with the '(Y/n)' option
+        read -p "Using $ENV from .env file? (Y/n) " TEST_ENV
+
+        # Check if the input is empty or not 'Y' or 'y', and set a default value
+        if [ -z "$TEST_ENV" ] || [[ ! "$TEST_ENV" =~ ^[Yy]$ ]]; then
+            TEST_ENV="N"
+        fi
+
+        # Now, $TEST_ENV contains the user's choice (either 'Y' or 'N')
+        echo "Selected option: $TEST_ENV"
+
+        TEST_ENV=$ENV
+        # echo "$TEST_ENV"
     else
+        read -p "Enter the test environment name: " TEST_ENV
         echo "Error: [-e|--env] <TEST_ENV> is required."
         cli_help
     fi
@@ -100,12 +124,19 @@ fi
 
 # Options for SAM Local invocation
 EVENT_OPTS=""
-# Check for event configuration files
-if [ -e "$LAMBDA_PATH/event.json" ]; then
-    EVENT_OPTS="-e $LAMBDA_PATH/event.json"
-fi
-if [ -e "$LAMBDA_PATH/event-$TEST_ENV.json" ]; then
-    EVENT_OPTS="-e $LAMBDA_PATH/event-$TEST_ENV.json"
+if [ -e "$LAMBDA_PATH/$EVENT" ]; then
+    EVENT_OPTS="-e $LAMBDA_PATH/$EVENT"
+else
+    # Check for event configuration files
+    if [ -e "$LAMBDA_PATH/event.json" ]; then
+        EVENT_OPTS="-e $LAMBDA_PATH/event.json"
+    fi
+    if [ -e "$LAMBDA_PATH/event-local.json" ]; then
+        EVENT_OPTS="-e $LAMBDA_PATH/event-local.json"
+    fi
+    if [ -e "$LAMBDA_PATH/event-$TEST_ENV.json" ]; then
+        EVENT_OPTS="-e $LAMBDA_PATH/event-$TEST_ENV.json"
+    fi
 fi
 if [ -z "${EVENT_OPTS}" ]; then
     error "🛑 No corresponding event in $LAMBDA_PATH/"
@@ -127,7 +158,6 @@ if [ -z "${LOCAL_OPTS}" ]; then
 else
     debug "Local options: '$LOCAL_OPTS'"
 fi
-echo "$LOCAL_OPTS"
 
 # Modify Lambda stack name for functions containing "resolver"
 if [[ $LAMBDA_NAME == *"resolver"* ]]; then
@@ -138,31 +168,40 @@ else
     LAMBDA_STACKNAME=$LAMBDA_NAME
 fi
 
+# Restore positional parameters
+set -- "${POSITIONAL_ARGS[@]}"
+
 CDK_FOLDER="cdk.out"
 CDK_TEMPLATE_PATH="$CDK_FOLDER/tf-backend-$TEST_ENV.template.json"
+timestamp=$(date +%T)
+LOGS_PATH=$CLI_WORKDIR/logs$PROJECT_PATH
 
 # Synthesize AWS CloudFormation template and invoke Lambda function locally
 if [ "$NO_BUILD" != true ]; then
     cli_log "Building template" &&
-        ENV="$TEST_ENV" npx cdk synth --quiet &&
+        ENV="$TEST_ENV" npx cdk synth --quiet $DEBUG_FLAG &&
         (cli_log "Building template succeeded ✅") ||
         (echoerror "Building template failed 🛑")
 fi
 
-cli_log "Testing: $LAMBDA_NAME in $TEST_ENV" &&
-    (ENV="$TEST_ENV" sam local invoke "$LAMBDA_STACKNAME" \
-        "$EVENT_OPTS" "$LOCAL_OPTS" \
-        --template "$CDK_TEMPLATE_PATH") && rm -rf "$CDK_FOLDER"
+cli_log "Testing: '$LAMBDA_NAME' in '$TEST_ENV'" &&
+    echo $LAMBDA_STACKNAME &&
+    (ENV="$TEST_ENV" sam local invoke $LAMBDA_STACKNAME \
+        $EVENT_OPTS \
+        $LOCAL_OPTS \
+        $DEBUG_FLAG \
+        --template $CDK_TEMPLATE_PATH) &&
+    rm -rf "$CDK_FOLDER"
 
 # Function to read a configuration file
-function readConfigFile() {
-    sysconfdir="$PROJECT_PATH"
-    CONFIG_FILE="tfconfig.yml"
-    CONFIG_FILE_PATH="$sysconfdir/$CONFIG_FILE_NAME"
+# function readConfigFile() {
+#     sysconfdir="$PROJECT_PATH"
+#     CONFIG_FILE="tfconfig.yml"
+#     CONFIG_FILE_PATH="$sysconfdir/$CONFIG_FILE_NAME"
 
-    if test -f "$sysconfdir"; then
-        echo "yes $sysconfdir"
-        . "$sysconfdir"
-    fi
-    CONFIG_PARAM1=$(yq eval '.template_file.name' "$CONFIG_FILE")
-}
+#     if test -f "$sysconfdir"; then
+#         echo "yes $sysconfdir"
+#         . "$sysconfdir"
+#     fi
+#     CONFIG_PARAM1=$(yq eval '.template_file.name' "$CONFIG_FILE")
+# }
