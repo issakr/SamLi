@@ -35,8 +35,9 @@ Global options:
   -v,   for version
 
 Available commands:
-  test      Locally test a given handler 
-  *         Help
+  test              Locally test a given handler 
+  generate-event    generate appsync event with appToken 
+  *                 Help
 "
     exit 1
 }
@@ -60,6 +61,9 @@ case "$1" in
 #  ${@:2} essentially refers to all the command-line arguments except for the first one,
 test)
     "$CLI_WORKDIR/commands/test" "${@:2}"
+    ;;
+generate-event)
+    "$CLI_WORKDIR/commands/generate-event" "${@:2}"
     ;;
 *)
     cli_usage
