@@ -1,8 +1,8 @@
 #!/bin/bash
 
 # Define constants for your CLI
-CLI_NAME="timeLI"
-CLI_EXECUTABLE="timeli"
+CLI_NAME="samLI"
+CLI_EXECUTABLE="samli"
 
 # The root directory of your CLI
 CLI_ROOT="$(cd "$(dirname "$0")" && pwd)"
@@ -59,20 +59,7 @@ showPATH() {
     IFS="$oldifs" #restore old internal field separator
 }
 
-# Function to install the CLI
-install() {
-    echo "Installing $CLI_NAME..."
-    # Create the installation directory if it doesn't exist
-
-    mkdir -p "$INSTALL_DIR"
-    local tag="0.0.1"
-    # Download the CLI executable using curl and install it
-    curl -sSL "https://github.com/issakr/sam-cli/archive/refs/tags/$tag.zip" -o timefonds-cli.zip &&
-        unzip -q timefonds-cli.zip -d .
-
-    cp -r timefonds-cli-$tag/bin $INSTALL_DIR
-    rm -rf timefonds-cli.zip timefonds-cli-$tag
-
+addToSHELL() {
     echo "Adding $CLI_EXECUTABLE to bash commands"
 
     # Function to add INSTALL_DIR/bin to PATH in bash configuration file
@@ -99,34 +86,42 @@ install() {
         else
             add_to_zshrc
         fi
-
     }
 
-    # Check the user's shell and update the corresponding configuration file
-    SHELL_TYPE="$(basename "$SHELL")"
-    case "$SHELL_TYPE" in
-    # "bash") ;;
-    "zsh")
-        add_to_zshrc
-        ;;
-    *)
-        echo "Unsupported shell: $SHELL_TYPE"
-        ;;
-    esac
-
+    add_to_zshrc
     add_to_bashrc
 
     export PATH="$INSTALL_DIR/bin:$PATH"
-    ls -la $INSTALL_DIR/bin
+}
+
+# Function to install the CLI
+install() {
+
+    local tag=$(cat ./bin/VERSION)
+    echo "Installing $CLI_NAME v$tag..."
+
+    # Create the installation directory if it doesn't exist
+    mkdir -p "$INSTALL_DIR"
+
+    # # Download the CLI executable using curl and install it
+    curl -sSL "https://github.com/issakr/SamLi/archive/refs/tags/v$tag.zip" -o $CLI_EXECUTABLE.zip &&
+        unzip -q $CLI_EXECUTABLE.zip -d .
+
+    cp -r $CLI_EXECUTABLE-$tag/bin $INSTALL_DIR
+    rm -rf $CLI_EXECUTABLE.zip $CLI_EXECUTABLE-$tag
+
+    addToSHELL
+
     # Ensure the executable has the correct permissions
     chmod +x "$INSTALL_DIR/bin/$CLI_EXECUTABLE"
 
     echo "Install complete"
-    echo "Installed $CLI_NAME to $INSTALL_DIR"
+    echo "Installed $CLI_NAME v$tag to $INSTALL_DIR"
 }
 
 # Main script logic
 # check_installed
 # check_sam
 # check_docker
+
 install
