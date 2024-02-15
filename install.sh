@@ -96,8 +96,7 @@ addToSHELL() {
 
 # Function to install the CLI
 install() {
-
-    local tag=$(cat ./bin/VERSION)
+    local tag=$(curl -sSL "https://raw.githubusercontent.com/issakr/SamLi/master/bin/VERSION")
     echo "Installing $CLI_NAME v$tag..."
 
     # Create the installation directory if it doesn't exist
@@ -111,7 +110,7 @@ install() {
     rm -rf $CLI_EXECUTABLE.zip $CLI_EXECUTABLE-$tag
 
     addToSHELL
-
+    ls -la $INSTALL_DIR/bin/
     # Ensure the executable has the correct permissions
     chmod +x "$INSTALL_DIR/bin/$CLI_EXECUTABLE"
 
