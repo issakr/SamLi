@@ -4,7 +4,8 @@
 CLI_NAME="timefondsCLI"
 CLI_EXECUTABLE="timefonds"
 CLI_ROOT="$(cd "$(dirname "$0")" && pwd)" # The root directory of your CLI
-script_pwd=$(pwd)/bin
+
+# script_pwd=$(pwd)/bin
 INSTALL_DIR="$HOME/bin/timefonds" # or any other preferred installation directory
 
 check_timefonds() {
@@ -19,75 +20,13 @@ install_progress() {
     echo -e "\n[INFO] $1"
 }
 
-# if [ -d "$HOME/bin/timefonds" ] || check_timefonds; then
-#     echo "$CLI_NAME is already installed on this machine."
-#     exit 0
-# else
-echo "lol"
-#     mkdir -p $HOME/bin/timefonds && cd $HOME/bin/timefonds
-#     echo "Installing $CLI_NAME"
-#     mkdir lib
-#     cp -r $script_pwd/lib/* ./lib
-#     cp -r $script_pwd/commands/* ./commands
-#     cp $script_pwd/timefonds-cli .
-
-#     echo "Adding $CLI_EXECUTABLE to bash commands"
-#     current_profile=""
-#     if [ ! -e "${HOME}/.bash_profile" ]; then
-#         touch $HOME/.bash_profile
-#         current_profile=$(cat $HOME/.profile)
-#     else
-#         current_profile=$(sed '/export PATH/d' $HOME/.bash_profile)
-#     fi
-#     printf '%s\n' "export PATH=${HOME}/bin/$CLI_EXECUTABLE:${PATH}" \
-#         "$current_profile" >$HOME/.bash_profile
-#     echo "Install complete"
-# fi
-
-# Extract dependencies from the test script
-extract_test_dependencies() {
-    grep -Eo '\bcommand\s-v\s(\w+)' './bin/commands/test' | awk '{print $NF}'
-}
-
-# Extract dependencies from the libs script
-extract_libs_dependencies() {
-    grep -Eo '\bsource\s+(\w+)' './bin/lib/common' | awk '{print $NF}'
-}
-
-# Combine and remove duplicates from both sets of dependencies
-get_all_dependencies() {
-    sort -u <(extract_test_dependencies) <(extract_libs_dependencies)
-}
-
-# Install dependencies using the appropriate package manager
-install_dependencies() {
-
-    local dependencies=($(get_all_dependencies))
-    echo "Hello: $dependencies"
-
-    for dependency in "${dependencies[@]}"; do
-        echo "dep: $dependency"
-        # if ! command -v "$dependency" &>/dev/null; then
-        #     echo "Installing $dependency..."
-        #     # Adjust this line based on the package manager (e.g., apt-get, yum, brew)
-        #     sudo apt-get install -y "$dependency" || {
-        #         echo "Failed to install $dependency. Check your package manager and try again."
-        #         exit 1
-        #     }
-        # fi
-    done
-}
-
-# Main execution
-# install_dependencies
-
 # Function to check if AWS SAM is installed
 check_sam() {
-    if !command -v sam &>/dev/null; then
+    if command -v sam &>/dev/null; then
         echo "AWS SAM is installed."
     else
         echo "AWS SAM is not installed. Please install it before continuing."
-        echo "You can install AWS SAM by following the instructions at: https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/serverless-sam-cli-install.html"
+        echo $'You can install AWS SAM by following the instructions at:\n\thttps://docs.aws.amazon.com/serverless-application-model/latest/developerguide/serverless-sam-cli-install.html'
         exit 1
     fi
 }
@@ -98,7 +37,7 @@ check_docker() {
         echo "Docker is installed."
     else
         echo "Docker is not installed. Please install Docker before continuing."
-        echo "You can install Docker by following the instructions at: https://docs.docker.com/get-docker/"
+        echo $'You can install Docker by following the instructions at:\n\thttps://docs.docker.com/get-docker/'
         exit 1
     fi
 }
@@ -119,16 +58,35 @@ install() {
     mkdir -p "$INSTALL_DIR"
 
     # Download the CLI executable using curl and install it
-    curl -sSL "$1" | tar -xz -C "$INSTALL_DIR" "$CLI_NAME"
+    # curl -sSL "$1" | tar -xz -C "$INSTALL_DIR" "$CLI_NAME"
+
+    #     mkdir -p $HOME/bin/timefonds && cd $HOME/bin/timefonds
+    #     echo "Installing $CLI_NAME"
+    #     mkdir lib
+    #     cp -r $script_pwd/lib/* ./lib
+    #     cp -r $script_pwd/commands/* ./commands
+    #     cp $script_pwd/timefonds-cli .
+
+    #     echo "Adding $CLI_EXECUTABLE to bash commands"
+    #     current_profile=""
+    #     if [ ! -e "${HOME}/.bash_profile" ]; then
+    #         touch $HOME/.bash_profile
+    #         current_profile=$(cat $HOME/.profile)
+    #     else
+    #         current_profile=$(sed '/export PATH/d' $HOME/.bash_profile)
+    #     fi
+    #     printf '%s\n' "export PATH=${HOME}/bin/$CLI_EXECUTABLE:${PATH}" \
+    #         "$current_profile" >$HOME/.bash_profile
+    #     echo "Install complete"
 
     # Ensure the executable has the correct permissions
-    chmod +x "$INSTALL_DIR/$CLI_NAME"
+    # chmod +x "$INSTALL_DIR/$CLI_NAME"
 
     echo "Installed $CLI_NAME to $INSTALL_DIR"
 }
 
 # Main script logic
-check_sam
-check_docker
-check_installed
+# check_installed
+# check_sam
+# check_docker
 install
