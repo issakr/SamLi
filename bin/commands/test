@@ -26,7 +26,6 @@ Usage: $cli_name [-e|--env <TEST_ENV> <functionName>]
 
 Available options:
    -e | --env,      for the test environment
-        --event,    provide event
    -n | --no-build, skip building the template
    -d | --debug,    debug features
    -h | --help,     for help
@@ -36,14 +35,15 @@ Available options:
 
 # Array to store positional arguments
 POSITIONAL_ARGS=()
+DEBUG_FLAG=""
 
 # Loop through command-line arguments
 while [[ $# -gt 0 ]]; do
     case $1 in
-    --event)
-        EVENT="$2"
-        shift 2 # skip both the argument and its value
-        ;;
+    # --event)
+    #     EVENT="$2"
+    #     shift 2 # skip both the argument and its value
+    #     ;;
     -e | --env)
         TEST_ENV="$2"
         shift 2 # skip both the argument and its value
@@ -124,20 +124,20 @@ fi
 
 # Options for SAM Local invocation
 EVENT_OPTS=""
-if [ -e "$LAMBDA_PATH/$EVENT" ]; then
-    EVENT_OPTS="-e $LAMBDA_PATH/$EVENT"
-else
-    # Check for event configuration files
-    if [ -e "$LAMBDA_PATH/event.json" ]; then
-        EVENT_OPTS="-e $LAMBDA_PATH/event.json"
-    fi
-    if [ -e "$LAMBDA_PATH/event-local.json" ]; then
-        EVENT_OPTS="-e $LAMBDA_PATH/event-local.json"
-    fi
-    if [ -e "$LAMBDA_PATH/event-$TEST_ENV.json" ]; then
-        EVENT_OPTS="-e $LAMBDA_PATH/event-$TEST_ENV.json"
-    fi
+# if [ [-n "$EVENT"] && [ -e "$LAMBDA_PATH/$EVENT"] ]; then
+#     EVENT_OPTS="-e $LAMBDA_PATH/$EVENT"
+# else
+#     # Check for event configuration files
+if [ -e "$LAMBDA_PATH/event.json" ]; then
+    EVENT_OPTS="-e $LAMBDA_PATH/event.json"
 fi
+if [ -e "$LAMBDA_PATH/event-local.json" ]; then
+    EVENT_OPTS="-e $LAMBDA_PATH/event-local.json"
+fi
+if [ -e "$LAMBDA_PATH/event-$TEST_ENV.json" ]; then
+    EVENT_OPTS="-e $LAMBDA_PATH/event-$TEST_ENV.json"
+fi
+# fi
 if [ -z "${EVENT_OPTS}" ]; then
     error "🛑 No corresponding event in $LAMBDA_PATH/"
 else
@@ -165,7 +165,7 @@ if [[ $LAMBDA_NAME == *"resolver"* ]]; then
     new_word="$(tr '-' '\n' <<<"$prefix" | awk '{print toupper(substr($0,1,1)) tolower(substr($0,2))}' | tr -d '\n')-resolver"
     LAMBDA_STACKNAME="$new_word-$TEST_ENV"
 else
-    LAMBDA_STACKNAME=$LAMBDA_NAME
+    LAMBDA_STACKNAME="$LAMBDA_NAME"
 fi
 
 # Restore positional parameters
@@ -174,34 +174,25 @@ set -- "${POSITIONAL_ARGS[@]}"
 CDK_FOLDER="cdk.out"
 CDK_TEMPLATE_PATH="$CDK_FOLDER/tf-backend-$TEST_ENV.template.json"
 timestamp=$(date +%T)
-LOGS_PATH=$CLI_WORKDIR/logs$PROJECT_PATH
+# LOGS_PATH=$CLI_WORKDIR/logs$PROJECT_PATH
 
 # Synthesize AWS CloudFormation template and invoke Lambda function locally
 if [ "$NO_BUILD" != true ]; then
     cli_log "Building template" &&
-        ENV="$TEST_ENV" npx cdk synth --quiet $DEBUG_FLAG &&
+        ENV="$TEST_ENV" npx cdk synth --quiet &&
         (cli_log "Building template succeeded ✅") ||
         (echoerror "Building template failed 🛑")
 fi
 
 cli_log "Testing: '$LAMBDA_NAME' in '$TEST_ENV'" &&
-    echo $LAMBDA_STACKNAME &&
-    (ENV="$TEST_ENV" sam local invoke $LAMBDA_STACKNAME \
-        $EVENT_OPTS \
-        $LOCAL_OPTS \
-        $DEBUG_FLAG \
-        --template $CDK_TEMPLATE_PATH) &&
+    echo "$LAMBDA_STACKNAME" &&
+    (
+        ENV="$TEST_ENV" sam local invoke $LAMBDA_STACKNAME \
+            $EVENT_OPTS \
+            $LOCAL_OPTS \
+            $DEBUG_FLAG \
+            --template $CDK_TEMPLATE_PATH
+    ) &&
     rm -rf "$CDK_FOLDER"
 
 # Function to read a configuration file
-# function readConfigFile() {
-#     sysconfdir="$PROJECT_PATH"
-#     CONFIG_FILE="tfconfig.yml"
-#     CONFIG_FILE_PATH="$sysconfdir/$CONFIG_FILE_NAME"
-
-#     if test -f "$sysconfdir"; then
-#         echo "yes $sysconfdir"
-#         . "$sysconfdir"
-#     fi
-#     CONFIG_PARAM1=$(yq eval '.template_file.name' "$CONFIG_FILE")
-# }
