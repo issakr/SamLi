@@ -1,4 +1,4 @@
-#!/usr/bin/env bash
+#!/bin/bash
 
 # Define constants for your CLI
 CLI_NAME="timefondsCLI"
