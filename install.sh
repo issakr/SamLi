@@ -1,15 +1,17 @@
 #!/bin/bash
+# This script installs the CLI tool
 
-# Define constants for your CLI
+# Define constants for the CLI
 CLI_NAME="samLI"
 CLI_EXECUTABLE="samli"
 
-# The root directory of your CLI
-CLI_ROOT="$(cd "$(dirname "$0")" && pwd)"
+source $CLI_WORKDIR/lib/common
+check_for_new_release
 
-# script_pwd=$(pwd)/bin
+# Define the installation directory
 SAMLI_HOME_DIR="$HOME/$CLI_EXECUTABLE" # or any other preferred installation directory
 
+# Function to check if the CLI is already installed
 check_timefonds() {
     # Check if the CLI executable already exists in $PATH
     if command -v "$CLI_EXECUTABLE" >/dev/null 2>&1; then
@@ -17,6 +19,7 @@ check_timefonds() {
         exit 0
     fi
 }
+
 # Function to display installation progress
 install_progress() {
     echo -e "\n[INFO] $1"
@@ -44,16 +47,9 @@ check_docker() {
     fi
 }
 
-# Function to check if the CLI is already installed
-check_installed() {
-    if [ -d "$SAMLI_HOME_DIR" ] || command -v "$CLI_EXECUTABLE" >/dev/null 2>&1; then
-        install_progress "$CLI_NAME is already installed on this machine."
-        exit 0
-    fi
-}
-
+# Function to add CLI executable to the user's shell
 addToSHELL() {
-    echo "Adding $CLI_EXECUTABLE to Shell"
+    debug "Adding $CLI_EXECUTABLE to Shell"
     line='export PATH=$PATH:$SAMLI_HOME_DIR/bin'
 
     # Function to add SAMLI_HOME_DIR/bin to PATH in bash configuration file
@@ -61,7 +57,7 @@ addToSHELL() {
         if ! grep -qF "$line" ~/.bashrc; then
             echo "export SAMLI_HOME_DIR=\"$SAMLI_HOME_DIR\"" >>~/.bashrc
             echo "$line" >>~/.bashrc
-            echo "Line added to ~/.bashrc"
+            debug "Line added to ~/.bashrc"
         else
             echo "Line already exists in ~/.bashrc"
         fi
@@ -69,26 +65,23 @@ addToSHELL() {
 
     # Function to add SAMLI_HOME_DIR/bin to PATH in zsh configuration file
     add_to_zshrc() {
-
         # Function to add SAMLI_HOME_DIR/bin to PATH in .zshenv file
         add_to_zshenv() {
-
             if ! grep -qF "$line" ~/.zshenv; then
                 echo "export SAMLI_HOME_DIR=\"$SAMLI_HOME_DIR\"" >>~/.zshenv
                 echo "$line" >>~/.zshenv
-                echo "Line added to ~/.zshenv"
-                # source ~/.zshenv
+                debug "Line added to ~/.zshenv"
             else
                 echo "Line already exists in ~/.zshenv"
             fi
-
         }
+
         # Function to add SAMLI_HOME_DIR/bin to PATH in .zshrc file
         add_to_zshrc() {
             if ! grep -qF "$line" ~/.zshrc; then
                 echo "export SAMLI_HOME_DIR=\"$SAMLI_HOME_DIR\"" >>~/.zshrc
                 echo "$line" >>~/.zshrc
-                echo "$line added to ~/.zshrc"
+                debug "Line added to ~/.zshrc"
             else
                 echo "Line already exists in ~/.zshrc"
             fi
@@ -108,12 +101,6 @@ addToSHELL() {
     export PATH="$SAMLI_HOME_DIR/bin:$PATH"
 }
 
-if [[ -n $1 ]]; then
-    tag=$1
-else
-    tag=$(curl -sSL "https://raw.githubusercontent.com/issakr/SamLi/master/bin/VERSION")
-fi
-
 # Function to install the CLI
 install() {
     echo "Installing $CLI_NAME v$tag..."
@@ -121,22 +108,15 @@ install() {
     # Create the installation directory if it doesn't exist
     mkdir -p "$SAMLI_HOME_DIR"
 
-    # # Download the CLI executable using curl and install it
-    curl -sSL "https://github.com/issakr/SamLi/archive/refs/tags/v$tag.zip" -o $CLI_EXECUTABLE.zip &&
+    # Download the CLI executable using curl and install it
+    (curl -sSL "https://github.com/issakr/SamLi/archive/refs/tags/v$tag.zip" -o $CLI_EXECUTABLE.zip &&
         unzip -q $CLI_EXECUTABLE.zip -d . &&
         cp -r $CLI_EXECUTABLE-$tag/bin $SAMLI_HOME_DIR &&
         addToSHELL &&
-        rm -rf $CLI_EXECUTABLE.zip $CLI_EXECUTABLE-$tag &&
-        echo "Installed $CLI_NAME v$tag to $SAMLI_HOME_DIR complete ✅" || echo "Instalation failed ! 🛑"
-
-    # Ensure the executable has the correct permissions
-    # chmod +x "$SAMLI_HOME_DIR/bin/$CLI_EXECUTABLE"
-
+        rm -rf $CLI_EXECUTABLE.zip $CLI_EXECUTABLE-$tag) &&
+        echo "Installed $CLI_NAME v$tag to $SAMLI_HOME_DIR complete ✅" ||
+        echo "Installation failed ! 🛑"
 }
 
 # Main script logic
-# check_installed
-# check_sam
-# check_docker
-
 install

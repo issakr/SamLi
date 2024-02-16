@@ -9,6 +9,10 @@ cli_name="${0##*/}"
 # Source a common library file from the specified location
 source "$CLI_WORKDIR/lib/common"
 
+if check_for_new_release; then
+    echo $'please use:\tsamLi update'
+fi
+
 # Function to print basic usage information
 cli_help() {
     cli_usage

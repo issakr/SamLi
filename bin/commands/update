@@ -1,0 +1,75 @@
+#!/usr/bin/env bash
+
+script_name=${0##*/}
+CLI_NAME="samLI"
+
+source "$CLI_WORKDIR/lib/common"
+
+# Function to print basic usage information
+cli_help() {
+    cli_usage
+    exit 1
+}
+
+# Function to print detailed usage information
+cli_usage() {
+    COMMANDS=$(ls)
+    echo "
+Usage: $CLI_NAME $script_name <version>
+
+* The latest version is used if none specified
+
+Available options:
+   -s | --silent,   for for interactivity
+   -h | --help,     for help
+"
+    exit 1
+}
+
+SILENT=false
+# Get the options
+while [[ $# -gt 0 ]]; do
+    case $1 in
+    -s | --silent)
+        SILENT=true
+        ;;
+    -h | --help)
+        cli_help
+        ;;
+    -* | --*)
+        echo "Unknown option $1"
+        cli_help
+        ;;
+    esac
+done
+
+# Restore positional parameters
+set -- "${POSITIONAL_ARGS[@]}"
+
+update() {
+    ./bin/commands/uninstall -y &&
+        curl -sSL "$INSTALL_URL" | bash
+
+}
+
+update() {
+    if [ "$force" = true ]; then
+        update
+    else
+        read -p "Are you sure you want to update the tool? (y/n) " choice
+        case "$choice" in
+        y | Y)
+            update
+            ;;
+        *)
+            echo "Uninstallation cancelled"
+            ;;
+        esac
+    fi
+}
+
+if check_for_new_release; then
+    echo "Updating..."
+
+    update
+fi
