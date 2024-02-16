@@ -9,9 +9,6 @@ cli_name="${0##*/}"
 # Source a common library file from the specified location
 source "$CLI_WORKDIR/lib/common"
 
-# Import a configuration file
-importFile "$CLI_WORKDIR/../.conf"
-
 # Function to print basic usage information
 cli_help() {
     cli_usage

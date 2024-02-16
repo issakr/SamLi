@@ -7,6 +7,8 @@ CLI_EXECUTABLE="samli"
 # The root directory of your CLI
 CLI_ROOT="$(cd "$(dirname "$0")" && pwd)"
 
+echo $1
+
 # script_pwd=$(pwd)/bin
 INSTALL_DIR="$HOME/$CLI_EXECUTABLE" # or any other preferred installation directory
 
@@ -110,9 +112,9 @@ install() {
     rm -rf $CLI_EXECUTABLE.zip $CLI_EXECUTABLE-$tag
 
     addToSHELL
-    ls -la $INSTALL_DIR/bin/
+
     # Ensure the executable has the correct permissions
-    chmod +x "$INSTALL_DIR/bin/$CLI_EXECUTABLE"
+    # chmod +x "$INSTALL_DIR/bin/$CLI_EXECUTABLE"
 
     echo "Install complete"
     echo "Installed $CLI_NAME v$tag to $INSTALL_DIR"
