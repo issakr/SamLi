@@ -20,6 +20,17 @@ removeLineFromFile() {
     fi
 }
 
+addLineToFile() {
+    local line=$1
+    local file=$2
+    if ! grep -qF "$line" "$file"; then
+        echo "export SAMLI_HOME_DIR=\"$SAMLI_HOME_DIR\"" >>"$file"
+        echo "$line" >>"$file"
+        debug "Line added to '$file'"
+    else
+        echo "Line already exists in '$file'"
+    fi
+}
 # Function to print error messages in red to stderr
 echoerror() {
     local color='\033[31m'
@@ -63,7 +74,7 @@ check_installed() {
 
 # Function to check for a new release of the CLI
 check_for_new_release() {
-    current_version=$(cat $CLI_WORKDIR/VERSION)
+    current_version=$(cat $CLI_WORKDIR/bin/VERSION)
     latest_release=$(curl -sSL "https://raw.githubusercontent.com/issakr/SamLi/master/bin/VERSION")
     local NO_UPDATED_NEEDED=1
     local UPDATED_NEEDED=0
