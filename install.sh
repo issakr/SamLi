@@ -3,9 +3,8 @@
 # Define constants for your CLI
 CLI_NAME="samLI"
 CLI_EXECUTABLE="samli"
-export CLI_WORKDIR=$(cd $(dirname $0) && pwd)
 
-source "$CLI_WORKDIR/bin/lib/common"
+source "./bin/lib/common"
 check_for_new_release
 
 # script_pwd=$(pwd)/bin
