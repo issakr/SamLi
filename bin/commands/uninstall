@@ -1,17 +1,24 @@
+#!/usr/bin/env bash
+
+# Extract the name of the script without the path
+script_name="${0##*/}"
 # Define constants for your CLI
 CLI_NAME="samLI"
 CLI_EXECUTABLE="samli"
 
-export CLI_WORKDIR=$(cd $(dirname $0) && pwd)
-source $CLI_WORKDIR/../lib/common
+# Source common library functions
+source $CLI_WORKDIR/lib/common
 
+# Function to remove CLI executable from the user's shell configuration
 removeFromSHELL() {
     line=SAMLI_HOME_DIR
 
+    # Function to uninstall CLI from bash configuration file
     uninstall_from_bashrc() {
         removeLineFromFile "$line" ~/.bashrc
     }
 
+    # Function to uninstall CLI from zsh configuration file
     uninstall_from_zshrc() {
         remove_from_zshrc() {
             removeLineFromFile "$line" ~/.zshrc
@@ -25,29 +32,95 @@ removeFromSHELL() {
         else
             remove_from_zshrc "$1"
         fi
-
     }
 
     # Determine which shell is being used and call the corresponding uninstall function
-    # if [ -n "$ZSH_VERSION" ]; then
     uninstall_from_zshrc "$CLI_EXECUTABLE"
-    # elif [ -n "$BASH_VERSION" ]; then
     uninstall_from_bashrc "$CLI_EXECUTABLE"
-    # else
-    #     echo "Unsupported shell"
-    #     exit 1
-    # fi
-
 }
 
-tag=$(cat $CLI_WORKDIR/../VERSION)
+# Get the current version of the CLI
+tag=$(cat $CLI_WORKDIR/VERSION)
 
+# Function to uninstall the CLI
 uninstall() {
-
-    echo "Uninstalling $CLI_NAME v$tag..."
+    debug "Uninstalling $CLI_NAME v$tag..."
 
     removeFromSHELL
 
     rm -rf "$SAMLI_HOME_DIR"
 }
-uninstall
+
+# Function to print basic usage information
+cli_help() {
+    cli_usage
+    exit 1
+}
+
+# Function to print detailed usage information
+cli_usage() {
+    COMMANDS=$(ls)
+    echo "
+Usage: $CLI_NAME $script_name [-y|--yes]
+
+Available options:
+   -y | --yes,      for a for uninstall
+   -d | --debug,    debug features
+   -h | --help,     for help
+"
+    exit 1
+}
+
+# Array to store positional arguments
+POSITIONAL_ARGS=()
+
+DEBUG_FLAG=""
+force=false
+
+# Parse command-line options
+while [[ $# -gt 0 ]]; do
+    case $1 in
+    -y | --yes)
+        force=true
+        shift # skip the argument
+        ;;
+    -d | --debug)
+        DEBUG_FLAG="--debug"
+        shift # skip the argument
+        ;;
+    -h | --help)
+        cli_help
+        ;;
+    -* | --*)
+        echo "Unknown option $1"
+        cli_help
+        ;;
+    *)
+        POSITIONAL_ARGS+=("$1") # save positional arg
+        shift                   # skip the argument
+        ;;
+    esac
+done
+
+# Restore positional parameters
+set -- "${POSITIONAL_ARGS[@]}"
+
+# Function to handle force uninstallation
+force_uninstall() {
+    if [ "$force" = true ]; then
+        uninstall
+    else
+        read -p "Are you sure you want to uninstall the tool? (y/n) " choice
+        case "$choice" in
+        y | Y)
+            uninstall
+            ;;
+        *)
+            echo "Uninstallation cancelled"
+            ;;
+        esac
+    fi
+}
+
+# Execute force uninstallation and display success message
+force_uninstall && echo "$CLI_NAME v$tag uninstalled ✅"

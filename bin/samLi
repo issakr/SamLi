@@ -1,27 +1,33 @@
 #!/usr/bin/env bash
 
+# Get the name of the CLI script
 cli_name=${0##*/}
-export CLI_WORKDIR=$(cd $(dirname $0) && pwd)
 
+# Set the working directory of the CLI and installation URL
+export CLI_WORKDIR=$(cd $(dirname $0) && pwd)
+export INSTALL_URL=https://raw.githubusercontent.com/issakr/SamLi/master/install.sh
+
+# Source common functions and variables
 source $CLI_WORKDIR/lib/common
 
+# Function to display CLI help message
 cli_help() {
     cli_version
     cli_usage
     exit 1
 }
 
+# Function to display CLI version information
 cli_version() {
-
     echo "
 ${cli_name}  version $(cat $CLI_WORKDIR/VERSION)
 
 ${cli_name} is a Wrapper for AWS SAM.
 Copyright (©) July 2023, Issam Sakr with love.
 "
-
 }
 
+# Function to display CLI usage information
 cli_usage() {
     COMMANDS=${ls}
     echo "
@@ -34,39 +40,43 @@ Global options:
 Available commands:
   test              Locally test a given handler 
   uninstall         uninstall this cli 
+  update            update this cli
   generate-event    generate appsync event with appToken 
   *                 Help
 "
     exit 1
 }
 
-# Get the options
+# Parse command-line options
 while getopts "hv" flag; do
     case $flag in
-    h) # display Help
+    h) # Display help message
         cli_help
         ;;
-    v) # display version
+    v) # Display version information
         cli_version
         ;;
-    ?)
+    ?) # Display help message for unrecognized options
         cli_help
         ;;
     esac
 done
 
+# Handle different commands passed to the CLI
 case "$1" in
-#  ${@:2} essentially refers to all the command-line arguments except for the first one,
-test)
+test) # Test command
     "$CLI_WORKDIR/commands/test" "${@:2}"
     ;;
-generate-event)
+generate-event) # Generate event command
     "$CLI_WORKDIR/commands/generate-event" "${@:2}"
     ;;
-uninstall)
+update) # Update command
+    "$CLI_WORKDIR/commands/update" "${@:2}"
+    ;;
+uninstall) # Uninstall command
     "$CLI_WORKDIR/commands/uninstall" "${@:2}"
     ;;
-*)
+*) # Default case: Display usage information for unrecognized commands
     cli_usage
     ;;
 esac
