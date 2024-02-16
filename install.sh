@@ -4,8 +4,6 @@
 CLI_NAME="samLI"
 CLI_EXECUTABLE="samli"
 
-check_for_new_release
-
 # script_pwd=$(pwd)/bin
 SAMLI_HOME_DIR="$HOME/$CLI_EXECUTABLE" # or any other preferred installation directory
 
@@ -49,7 +47,7 @@ addLineToFile() {
     if ! grep -qF "$line" "$file"; then
         echo "export SAMLI_HOME_DIR=\"$SAMLI_HOME_DIR\"" >>"$file"
         echo "$line" >>"$file"
-        debug "Line added to '$file'"
+        echo "'$file' updated"
     else
         echo "Line already exists in '$file'"
     fi
