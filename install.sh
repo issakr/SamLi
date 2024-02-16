@@ -7,8 +7,6 @@ CLI_EXECUTABLE="samli"
 # The root directory of your CLI
 CLI_ROOT="$(cd "$(dirname "$0")" && pwd)"
 
-echo $1
-
 # script_pwd=$(pwd)/bin
 INSTALL_DIR="$HOME/$CLI_EXECUTABLE" # or any other preferred installation directory
 
@@ -54,19 +52,18 @@ check_installed() {
     fi
 }
 
-showPATH() {
-    oldifs="$IFS" #store old internal field separator
-    IFS=:         #specify a new internal field separator
-    for DIR in $PATH; do echo $DIR; done
-    IFS="$oldifs" #restore old internal field separator
-}
-
 addToSHELL() {
     echo "Adding $CLI_EXECUTABLE to bash commands"
 
     # Function to add INSTALL_DIR/bin to PATH in bash configuration file
     add_to_bashrc() {
-        echo "export PATH=\"$INSTALL_DIR/bin:\$PATH\"" >>~/.bashrc
+        local line='export PATH="$INSTALL_DIR/bin:$PATH"'
+        if ! grep -qF "$line" ~/.bashrc; then
+            echo "$line" >>~/.bashrc
+            echo "Line added to ~/.bashrc"
+        else
+            echo "Line already exists in ~/.bashrc"
+        fi
     }
 
     # Function to add INSTALL_DIR/bin to PATH in zsh configuration file
@@ -74,14 +71,26 @@ addToSHELL() {
 
         # Function to add INSTALL_DIR/bin to PATH in .zshenv file
         add_to_zshenv() {
-            echo "export PATH=\"$INSTALL_DIR/bin:\$PATH\"" >>~/.zshenv
+            local line='export PATH="$INSTALL_DIR/bin:$PATH"'
+            if ! grep -qF "$line" ~/.zshenv; then
+                echo "$line" >>~/.zshenv
+                echo "Line added to ~/.zshenv"
+            else
+                echo "Line already exists in ~/.zshenv"
+            fi
 
         }
         # Function to add INSTALL_DIR/bin to PATH in .zshrc file
         add_to_zshrc() {
-            echo "export PATH=\"$INSTALL_DIR/bin:\$PATH\"" >>~/.zshrc
-
+            local line='export PATH="$INSTALL_DIR/bin:$PATH"'
+            if ! grep -qF "$line" ~/.zshrc; then
+                echo "$line" >>~/.zshrc
+                echo "Line added to ~/.zshrc"
+            else
+                echo "Line already exists in ~/.zshrc"
+            fi
         }
+
         # Check if .zshenv exists and update it, otherwise update .zshrc
         if [ -f ~/.zshenv ]; then
             add_to_zshenv
@@ -91,14 +100,14 @@ addToSHELL() {
     }
 
     add_to_zshrc
-    add_to_bashrc
+    # add_to_bashrc
 
     export PATH="$INSTALL_DIR/bin:$PATH"
 }
 
 # Function to install the CLI
 install() {
-    local tag=$(curl -sSL "https://raw.githubusercontent.com/issakr/SamLi/master/bin/VERSION")
+    local tag=$1 || $(curl -sSL "https://raw.githubusercontent.com/issakr/SamLi/master/bin/VERSION")
     echo "Installing $CLI_NAME v$tag..."
 
     # Create the installation directory if it doesn't exist
