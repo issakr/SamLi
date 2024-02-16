@@ -8,7 +8,7 @@ CLI_EXECUTABLE="samli"
 CLI_ROOT="$(cd "$(dirname "$0")" && pwd)"
 
 # script_pwd=$(pwd)/bin
-INSTALL_DIR="$HOME/$CLI_EXECUTABLE" # or any other preferred installation directory
+SAMLI_HOME_DIR="$HOME/$CLI_EXECUTABLE" # or any other preferred installation directory
 
 check_timefonds() {
     # Check if the CLI executable already exists in $PATH
@@ -46,20 +46,20 @@ check_docker() {
 
 # Function to check if the CLI is already installed
 check_installed() {
-    if [ -d "$INSTALL_DIR" ] || command -v "$CLI_EXECUTABLE" >/dev/null 2>&1; then
+    if [ -d "$SAMLI_HOME_DIR" ] || command -v "$CLI_EXECUTABLE" >/dev/null 2>&1; then
         install_progress "$CLI_NAME is already installed on this machine."
         exit 0
     fi
 }
 
 addToSHELL() {
-    echo "Adding $CLI_EXECUTABLE to bash commands"
+    echo "Adding $CLI_EXECUTABLE to Shell"
     line='export PATH=$PATH:$SAMLI_HOME_DIR/bin'
 
-    # Function to add INSTALL_DIR/bin to PATH in bash configuration file
+    # Function to add SAMLI_HOME_DIR/bin to PATH in bash configuration file
     add_to_bashrc() {
         if ! grep -qF "$line" ~/.bashrc; then
-            echo "export SAMLI_HOME_DIR=\"$INSTALL_DIR\"" >>~/.bashrc
+            echo "export SAMLI_HOME_DIR=\"$SAMLI_HOME_DIR\"" >>~/.bashrc
             echo "$line" >>~/.bashrc
             echo "Line added to ~/.bashrc"
         else
@@ -67,14 +67,14 @@ addToSHELL() {
         fi
     }
 
-    # Function to add INSTALL_DIR/bin to PATH in zsh configuration file
+    # Function to add SAMLI_HOME_DIR/bin to PATH in zsh configuration file
     add_to_zshrc() {
 
-        # Function to add INSTALL_DIR/bin to PATH in .zshenv file
+        # Function to add SAMLI_HOME_DIR/bin to PATH in .zshenv file
         add_to_zshenv() {
 
             if ! grep -qF "$line" ~/.zshenv; then
-                echo "export SAMLI_HOME_DIR=\"$INSTALL_DIR\"" >>~/.zshenv
+                echo "export SAMLI_HOME_DIR=\"$SAMLI_HOME_DIR\"" >>~/.zshenv
                 echo "$line" >>~/.zshenv
                 echo "Line added to ~/.zshenv"
                 # source ~/.zshenv
@@ -86,7 +86,7 @@ addToSHELL() {
         # Function to add SAMLI_HOME_DIR/bin to PATH in .zshrc file
         add_to_zshrc() {
             if ! grep -qF "$line" ~/.zshrc; then
-                echo "export SAMLI_HOME_DIR=\"$INSTALL_DIR\"" >>~/.zshrc
+                echo "export SAMLI_HOME_DIR=\"$SAMLI_HOME_DIR\"" >>~/.zshrc
                 echo "$line" >>~/.zshrc
                 echo "$line added to ~/.zshrc"
             else
@@ -105,7 +105,7 @@ addToSHELL() {
     add_to_zshrc
     # add_to_bashrc
 
-    export PATH="$INSTALL_DIR/bin:$PATH"
+    export PATH="$SAMLI_HOME_DIR/bin:$PATH"
 }
 
 if [[ -n $1 ]]; then
@@ -119,20 +119,19 @@ install() {
     echo "Installing $CLI_NAME v$tag..."
 
     # Create the installation directory if it doesn't exist
-    mkdir -p "$INSTALL_DIR"
+    mkdir -p "$SAMLI_HOME_DIR"
 
     # # Download the CLI executable using curl and install it
     curl -sSL "https://github.com/issakr/SamLi/archive/refs/tags/v$tag.zip" -o $CLI_EXECUTABLE.zip &&
         unzip -q $CLI_EXECUTABLE.zip -d . &&
-        cp -r $CLI_EXECUTABLE-$tag/bin $INSTALL_DIR &&
-        addToSHELL
-    rm -rf $CLI_EXECUTABLE.zip $CLI_EXECUTABLE-$tag
+        cp -r $CLI_EXECUTABLE-$tag/bin $SAMLI_HOME_DIR &&
+        addToSHELL &&
+        rm -rf $CLI_EXECUTABLE.zip $CLI_EXECUTABLE-$tag &&
+        echo "Installed $CLI_NAME v$tag to $SAMLI_HOME_DIR complete ✅" || echo "Instalation failed ! 🛑"
 
     # Ensure the executable has the correct permissions
-    # chmod +x "$INSTALL_DIR/bin/$CLI_EXECUTABLE"
+    # chmod +x "$SAMLI_HOME_DIR/bin/$CLI_EXECUTABLE"
 
-    echo "Install complete"
-    echo "Installed $CLI_NAME v$tag to $INSTALL_DIR"
 }
 
 # Main script logic

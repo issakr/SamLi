@@ -3,5 +3,5 @@
 ###
 
 ```
-curl -sSL "https://raw.githubusercontent.com/issakr/SamLi/master/install.sh" | bash -s -- "0.0.7"
+curl -sSL "https://raw.githubusercontent.com/issakr/SamLi/master/install.sh" | bash -s -- "0.0.8"
 ```

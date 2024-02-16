@@ -1,0 +1,53 @@
+# Define constants for your CLI
+CLI_NAME="samLI"
+CLI_EXECUTABLE="samli"
+
+export CLI_WORKDIR=$(cd $(dirname $0) && pwd)
+source $CLI_WORKDIR/../lib/common
+
+removeFromSHELL() {
+    line=SAMLI_HOME_DIR
+
+    uninstall_from_bashrc() {
+        removeLineFromFile "$line" ~/.bashrc
+    }
+
+    uninstall_from_zshrc() {
+        remove_from_zshrc() {
+            removeLineFromFile "$line" ~/.zshrc
+        }
+        remove_from_zshenv() {
+            removeLineFromFile "$line" ~/.zshenv
+        }
+        # Check if .zshenv exists and update it, otherwise update .zshrc
+        if [ -f ~/.zshenv ]; then
+            remove_from_zshenv "$1"
+        else
+            remove_from_zshrc "$1"
+        fi
+
+    }
+
+    # Determine which shell is being used and call the corresponding uninstall function
+    # if [ -n "$ZSH_VERSION" ]; then
+    uninstall_from_zshrc "$CLI_EXECUTABLE"
+    # elif [ -n "$BASH_VERSION" ]; then
+    uninstall_from_bashrc "$CLI_EXECUTABLE"
+    # else
+    #     echo "Unsupported shell"
+    #     exit 1
+    # fi
+
+}
+
+tag=$(cat $CLI_WORKDIR/../VERSION)
+
+uninstall() {
+
+    echo "Uninstalling $CLI_NAME v$tag..."
+
+    removeFromSHELL
+
+    rm -rf "$SAMLI_HOME_DIR"
+}
+uninstall

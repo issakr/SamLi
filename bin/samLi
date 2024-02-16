@@ -14,10 +14,10 @@ cli_help() {
 cli_version() {
 
     echo "
-${cli_name}CLI
+${cli_name}  version $(cat $CLI_WORKDIR/VERSION)
 
-SamLI a Wrapper for AWS SAM. version $(cat $CLI_WORKDIR/VERSION)
-Copyright (C) July 2023, Issam Sakr with love.
+${cli_name} is a Wrapper for AWS SAM.
+Copyright (©) July 2023, Issam Sakr with love.
 "
 
 }
@@ -33,6 +33,7 @@ Global options:
 
 Available commands:
   test              Locally test a given handler 
+  uninstall         uninstall this cli 
   generate-event    generate appsync event with appToken 
   *                 Help
 "
@@ -61,6 +62,9 @@ test)
     ;;
 generate-event)
     "$CLI_WORKDIR/commands/generate-event" "${@:2}"
+    ;;
+uninstall)
+    "$CLI_WORKDIR/commands/uninstall" "${@:2}"
     ;;
 *)
     cli_usage
