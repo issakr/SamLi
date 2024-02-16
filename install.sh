@@ -54,11 +54,12 @@ check_installed() {
 
 addToSHELL() {
     echo "Adding $CLI_EXECUTABLE to bash commands"
+    line='export PATH=$PATH:$SAMLI_HOME_DIR/bin'
 
     # Function to add INSTALL_DIR/bin to PATH in bash configuration file
     add_to_bashrc() {
-        local line='export PATH="$INSTALL_DIR/bin:$PATH"'
         if ! grep -qF "$line" ~/.bashrc; then
+            echo "export SAMLI_HOME_DIR=\"$INSTALL_DIR\"" >>~/.bashrc
             echo "$line" >>~/.bashrc
             echo "Line added to ~/.bashrc"
         else
@@ -71,21 +72,23 @@ addToSHELL() {
 
         # Function to add INSTALL_DIR/bin to PATH in .zshenv file
         add_to_zshenv() {
-            local line='export PATH="$INSTALL_DIR/bin:$PATH"'
+
             if ! grep -qF "$line" ~/.zshenv; then
+                echo "export SAMLI_HOME_DIR=\"$INSTALL_DIR\"" >>~/.zshenv
                 echo "$line" >>~/.zshenv
                 echo "Line added to ~/.zshenv"
+                # source ~/.zshenv
             else
                 echo "Line already exists in ~/.zshenv"
             fi
 
         }
-        # Function to add INSTALL_DIR/bin to PATH in .zshrc file
+        # Function to add SAMLI_HOME_DIR/bin to PATH in .zshrc file
         add_to_zshrc() {
-            local line='export PATH="$INSTALL_DIR/bin:$PATH"'
             if ! grep -qF "$line" ~/.zshrc; then
+                echo "export SAMLI_HOME_DIR=\"$INSTALL_DIR\"" >>~/.zshrc
                 echo "$line" >>~/.zshrc
-                echo "Line added to ~/.zshrc"
+                echo "$line added to ~/.zshrc"
             else
                 echo "Line already exists in ~/.zshrc"
             fi
@@ -105,9 +108,14 @@ addToSHELL() {
     export PATH="$INSTALL_DIR/bin:$PATH"
 }
 
+if [[ -n $1 ]]; then
+    tag=$1
+else
+    tag=$(curl -sSL "https://raw.githubusercontent.com/issakr/SamLi/master/bin/VERSION")
+fi
+
 # Function to install the CLI
 install() {
-    local tag=$1 || $(curl -sSL "https://raw.githubusercontent.com/issakr/SamLi/master/bin/VERSION")
     echo "Installing $CLI_NAME v$tag..."
 
     # Create the installation directory if it doesn't exist
@@ -115,12 +123,10 @@ install() {
 
     # # Download the CLI executable using curl and install it
     curl -sSL "https://github.com/issakr/SamLi/archive/refs/tags/v$tag.zip" -o $CLI_EXECUTABLE.zip &&
-        unzip -q $CLI_EXECUTABLE.zip -d .
-
-    cp -r $CLI_EXECUTABLE-$tag/bin $INSTALL_DIR
+        unzip -q $CLI_EXECUTABLE.zip -d . &&
+        cp -r $CLI_EXECUTABLE-$tag/bin $INSTALL_DIR &&
+        addToSHELL
     rm -rf $CLI_EXECUTABLE.zip $CLI_EXECUTABLE-$tag
-
-    addToSHELL
 
     # Ensure the executable has the correct permissions
     # chmod +x "$INSTALL_DIR/bin/$CLI_EXECUTABLE"
