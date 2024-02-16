@@ -4,7 +4,6 @@
 CLI_NAME="samLI"
 CLI_EXECUTABLE="samli"
 
-source "./bin/lib/common"
 check_for_new_release
 
 # script_pwd=$(pwd)/bin
@@ -44,6 +43,17 @@ check_docker() {
     fi
 }
 
+addLineToFile() {
+    local line=$1
+    local file=$2
+    if ! grep -qF "$line" "$file"; then
+        echo "export SAMLI_HOME_DIR=\"$SAMLI_HOME_DIR\"" >>"$file"
+        echo "$line" >>"$file"
+        debug "Line added to '$file'"
+    else
+        echo "Line already exists in '$file'"
+    fi
+}
 addToSHELL() {
     line='export PATH=$PATH:$SAMLI_HOME_DIR/bin'
 
