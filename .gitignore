@@ -3,3 +3,4 @@
 .env
 .env.*
 .conf
+node_modules/

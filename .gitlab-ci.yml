@@ -1,0 +1,18 @@
+# stages:
+#   - release
+
+# release:
+#   image: node:20
+#   stage: release
+#   variables:
+#     GH_TOKEN: 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
+#     # GITLAB_TOKEN: glpat-5224G6qntL6SptR3p9MN
+#     # GITLAB_URL: https://gitlab.com/timefonds-ag/pdf-generator.git
+#     # GITLAB_API_URL: https://gitlab.com/api/v4/
+#   before_script:
+#     # - npm install
+#     - apt-get update && apt-get install -y --no-install-recommends git-core ca-certificates
+#     - npm install -g semantic-release
+#     # @semantic-release/gitlab
+#   script:
+#     -  semantic-release --ci

@@ -9,6 +9,13 @@ cli_name="${0##*/}"
 # Source a common library file from the specified location
 source "$CLI_WORKDIR/lib/common"
 
+# # Set the project path to the current working directory
+# PROJECT_PATH=$(pwd)
+PROJECT_PATH="$TFONDS/time-value-account/cdk"
+HANDLERS_PATH="src/handler"
+APPNAME="tf-backend"
+CDK_FOLDER_NAME="cdk.out"
+
 if check_for_new_release; then
     echo $'please use:\tsamLi update'
 fi
@@ -23,15 +30,17 @@ cli_help() {
 cli_usage() {
     COMMANDS=$(ls) # This should probably be changed to COMMANDS=$(ls)
     echo "
-Usage: $cli_name [-e|--env <TEST_ENV> <functionName>]
+Usage: $cli_name [--env <TEST_ENV> -e <EVENT_PATH> -l <LOCAL_ENV_PATH>] <functionName>
 
 Available options:
-   -e | --env,      for the test environment
-   -n | --no-build, skip building the template
+        --env,      environment's name
    -d | --debug,    debug features
    -h | --help,     for help
+Optional options:
+   -e | --event,    event's path from the function's folder. (JSON)
+   -l | --local,    local environments variables's path from the project's folder. (JSON)
+   -n | --no-build, skip building the template
 "
-    exit 1
 }
 
 # Array to store positional arguments
@@ -41,11 +50,15 @@ DEBUG_FLAG=""
 # Loop through command-line arguments
 while [[ $# -gt 0 ]]; do
     case $1 in
-    # --event)
-    #     EVENT="$2"
-    #     shift 2 # skip both the argument and its value
-    #     ;;
-    -e | --env)
+    -l | --local)
+        LOCAL_ENV_PATH="$2"
+        shift 2 # skip both the argument and its value
+        ;;
+    -e | --event)
+        EVENT="$2"
+        shift 2 # skip both the argument and its value
+        ;;
+    --env)
         TEST_ENV="$2"
         shift 2 # skip both the argument and its value
         ;;
@@ -82,85 +95,65 @@ fi
 # Check if function name is missing
 if [ -z "$LAMBDA_NAME" ]; then
     echo "Error: <functionName> is required."
-    cli_help
+    cli_usage
+    read -p "Enter the function name: " LAMBDA_NAME
+
 fi
 
-# Check if test environment is missing
+# # Check if test environment is missing
 if [ -z "${TEST_ENV}" ]; then
-    if [ -n "$ENV" ]; then
+    echo "Error: <TEST_ENV> is required."
+    cli_usage
+    read -p "Enter the test environment name: " TEST_ENV
 
-        TEST_ENV=$ENV
-
-        # Prompt the user with the '(Y/n)' option
-        read -p "Using $ENV from .env file? (Y/n) " TEST_ENV
-
-        # Check if the input is empty or not 'Y' or 'y', and set a default value
-        if [ -z "$TEST_ENV" ] || [[ ! "$TEST_ENV" =~ ^[Yy]$ ]]; then
-            TEST_ENV="N"
-        fi
-
-        # Now, $TEST_ENV contains the user's choice (either 'Y' or 'N')
-        echo "Selected option: $TEST_ENV"
-
-        TEST_ENV=$ENV
-        # echo "$TEST_ENV"
-    else
-        read -p "Enter the test environment name: " TEST_ENV
-        echo "Error: [-e|--env] <TEST_ENV> is required."
-        cli_help
-    fi
 fi
 
-# Set the project path to the current working directory
-PROJECT_PATH=$(pwd)
-HANDLERS_PATH="src/handler"
-
-# Construct the full path to the Lambda function
+# # Construct the full path to the Lambda function
 LAMBDA_PATH="$PROJECT_PATH/$HANDLERS_PATH/$LAMBDA_NAME"
 
-# Check if the Lambda function file exists
+# # Check if the Lambda function file exists
 if [ ! -e "$LAMBDA_PATH/index.ts" ]; then
     error "🛑 File '$LAMBDA_PATH/index.ts' does not exist. Performing additional actions."
 fi
 
 # Options for SAM Local invocation
 EVENT_OPTS=""
-# if [ [-n "$EVENT"] && [ -e "$LAMBDA_PATH/$EVENT"] ]; then
-#     EVENT_OPTS="-e $LAMBDA_PATH/$EVENT"
-# else
-#     # Check for event configuration files
-if [ -e "$LAMBDA_PATH/event.json" ]; then
-    EVENT_OPTS="-e $LAMBDA_PATH/event.json"
-fi
-if [ -e "$LAMBDA_PATH/event-local.json" ]; then
-    EVENT_OPTS="-e $LAMBDA_PATH/event-local.json"
-fi
-if [ -e "$LAMBDA_PATH/event-$TEST_ENV.json" ]; then
-    EVENT_OPTS="-e $LAMBDA_PATH/event-$TEST_ENV.json"
-fi
-# fi
-if [ -z "${EVENT_OPTS}" ]; then
-    error "🛑 No corresponding event in $LAMBDA_PATH/"
+if [[ -n "$EVENT" ]]; then
+    if [ -e "$LAMBDA_PATH/$EVENT" ]; then
+        EVENT_OPTS="-e $LAMBDA_PATH/$EVENT"
+    fi
 else
-    debug "Event options: '$EVENT_OPTS'"
+    # Check for event configuration files
+    if [ -e "$LAMBDA_PATH/event.json" ]; then
+        EVENT_OPTS="-e $LAMBDA_PATH/event.json"
+    fi
+fi
+
+if [ -z "${EVENT_OPTS}" ]; then
+    error "🛑 No corresponding event found in $LAMBDA_PATH/$EVENT_OPTS"
 fi
 
 # Check for local (env vars) configuration files
 LOCAL_OPTS=""
-if [ -e "$LAMBDA_PATH/local.json" ]; then
-    LOCAL_OPTS="-n $LAMBDA_PATH/local.json"
-fi
-if [ -e "$LAMBDA_PATH/local-$TEST_ENV.json" ]; then
-    LOCAL_OPTS="-n $LAMBDA_PATH/local-$TEST_ENV.json"
-fi
-
-if [ -z "${LOCAL_OPTS}" ]; then
-    error "🛑 No corresponding local in $LAMBDA_PATH/"
+if [[ -n "$LOCAL_ENV_PATH" ]]; then
+    if [ -e "$LAMBDA_PATH/$LOCAL_ENV_PATH" ]; then
+        LOCAL_OPTS="-n $LAMBDA_PATH/$LOCAL_ENV_PATH"
+    fi
 else
-    debug "Local options: '$LOCAL_OPTS'"
+    if [ -e "$LAMBDA_PATH/local.json" ]; then
+        LOCAL_OPTS="-n $LAMBDA_PATH/local.json"
+    fi
+    if [ -e "$LAMBDA_PATH/local-$TEST_ENV.json" ]; then
+        LOCAL_OPTS="-n $LAMBDA_PATH/local-$TEST_ENV.json"
+    fi
+
+fi
+if [ -z "${LOCAL_OPTS}" ]; then
+    error "🛑 No corresponding local found in $LAMBDA_PATH/$LOCAL_OPTS"
+
 fi
 
-# Modify Lambda stack name for functions containing "resolver"
+# Modify Lambda stack name for functions containing "resolver" because they have env name in their names
 if [[ $LAMBDA_NAME == *"resolver"* ]]; then
     prefix="${LAMBDA_NAME%%-resolver*}"
     new_word="$(tr '-' '\n' <<<"$prefix" | awk '{print toupper(substr($0,1,1)) tolower(substr($0,2))}' | tr -d '\n')-resolver"
@@ -169,24 +162,33 @@ else
     LAMBDA_STACKNAME="$LAMBDA_NAME"
 fi
 
-# Restore positional parameters
-set -- "${POSITIONAL_ARGS[@]}"
+CDK_TEMPLATE_NAME="$APPNAME-$TEST_ENV.template.json"
 
-CDK_FOLDER="cdk.out"
-CDK_TEMPLATE_PATH="$CDK_FOLDER/tf-backend-$TEST_ENV.template.json"
-timestamp=$(date +%T)
-# LOGS_PATH=$CLI_WORKDIR/logs$PROJECT_PATH
+CDK_FOLDER_PATH="$PROJECT_PATH/$CDK_FOLDER_NAME"
+CDK_TEMPLATE_PATH="$CDK_FOLDER_NAME/$CDK_TEMPLATE_NAME"
+# timestamp=$(date +%T)
+# # LOGS_PATH=$CLI_WORKDIR/logs$PROJECT_PATH
 
 # Synthesize AWS CloudFormation template and invoke Lambda function locally
 if [ "$NO_BUILD" != true ]; then
-    cli_log "Building template" &&
-        ENV="$TEST_ENV" npx cdk synth --quiet &&
+    # # --app is required either in command-line, in cdk.json or in ~/.cdk.json,
+    # # so we just navigate to the project folder
+    cd $PROJECT_PATH &&
+        cli_log "Building template" &&
+        ENV="$TEST_ENV" npx cdk synth --quiet --output $CDK_FOLDER_NAME &&
         (cli_log "Building template succeeded ✅") ||
         (echoerror "Building template failed 🛑")
+else
+    if [ ! -e "$CDK_TEMPLATE_PATH" ]; then
+        echoerror "You may need to synth your CDK template"
+        echoerror "Its not found in $CDK_TEMPLATE_PATH"
+    fi
 fi
 
-cli_log "Testing: '$LAMBDA_NAME' in '$TEST_ENV'" &&
-    echo "$LAMBDA_STACKNAME" &&
+cli_log "#####Testing: '$LAMBDA_STACKNAME' in '$TEST_ENV'######"
+
+(debug "Local options: '$LOCAL_OPTS'" &&
+    debug "Event options: '$EVENT_OPTS'") &&
     (
         ENV="$TEST_ENV" sam local invoke $LAMBDA_STACKNAME \
             $EVENT_OPTS \
@@ -194,6 +196,6 @@ cli_log "Testing: '$LAMBDA_NAME' in '$TEST_ENV'" &&
             $DEBUG_FLAG \
             --template $CDK_TEMPLATE_PATH
     ) &&
-    rm -rf "$CDK_FOLDER"
-
-# Function to read a configuration file
+    if [ "$NO_BUILD" != true ]; then
+        cd $PROJECT_PATH && rm -rf "$CDK_FOLDER_PATH" || debug 'Folder not found'
+    fi
