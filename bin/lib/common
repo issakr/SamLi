@@ -47,8 +47,7 @@ error() {
 
 # Function to print debug messages if the $DEBUG flag is set to true
 debug() {
-    # TODO if debug flag
-    if [ -n $DEBUG ]; then
+    if [ -n $DEBUG_FLAG ]; then
         echo "$1"
     fi
 }
@@ -63,7 +62,8 @@ check_installed() {
 
 # Function to check for a new release of the CLI
 check_for_new_release() {
-    current_version=$(cat $CLI_WORKDIR/bin/VERSION)
+    silent=$1
+    current_version=$(cat $CLI_WORKDIR/VERSION)
     latest_release=$(curl -sSL "https://raw.githubusercontent.com/issakr/SamLi/master/bin/VERSION")
     local NO_UPDATED_NEEDED=1
     local UPDATED_NEEDED=0
@@ -71,7 +71,9 @@ check_for_new_release() {
         echo "A new release ($latest_release) is available."
         return $UPDATED_NEEDED
     else
-        echo "You have already the latest version ($current_version) installed"
+
+        debug "You have already the latest version ($current_version) installed"
+
         return $NO_UPDATED_NEEDED
     fi
 }

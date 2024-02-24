@@ -1,15 +1,14 @@
 #!/bin/bash
 
 # Define constants for your CLI
-CLI_NAME="samLI"
-CLI_EXECUTABLE="samli"
+CLI_NAME="samli"
 
 # script_pwd=$(pwd)/bin
-SAMLI_HOME_DIR="$HOME/$CLI_EXECUTABLE" # or any other preferred installation directory
+SAMLI_HOME_DIR="$HOME/$CLI_NAME" # or any other preferred installation directory
 
 check_timefonds() {
     # Check if the CLI executable already exists in $PATH
-    if command -v "$CLI_EXECUTABLE" >/dev/null 2>&1; then
+    if command -v "$CLI_NAME" >/dev/null 2>&1; then
         echo "The $CLI_NAME CLI is already installed."
         exit 0
     fi
@@ -82,7 +81,7 @@ addToSHELL() {
     }
 
     add_to_zshrc
-    # add_to_bashrc
+    add_to_bashrc
 
     export PATH="$SAMLI_HOME_DIR/bin:$PATH"
 }
@@ -101,18 +100,18 @@ install() {
     mkdir -p "$SAMLI_HOME_DIR"
 
     # # Download the CLI executable using curl and install it
-    (curl -sSL "https://github.com/issakr/SamLi/archive/refs/tags/v$tag.zip" -o $CLI_EXECUTABLE.zip &&
-        unzip -q $CLI_EXECUTABLE.zip -d . &&
-        cp -r $CLI_EXECUTABLE-$tag/bin $SAMLI_HOME_DIR &&
-        addToSHELL &&
-        rm -rf $CLI_EXECUTABLE.zip $CLI_EXECUTABLE-$tag) &&
+    (curl -sSL "https://github.com/issakr/SamLi/archive/refs/tags/v$tag.zip" -o $CLI_NAME.zip &&
+        unzip -q $CLI_NAME.zip -d .) &&
+        (cp -r $CLI_NAME-$tag/bin $SAMLI_HOME_DIR &&
+            addToSHELL &&
+            rm -rf $CLI_NAME.zip $CLI_NAME-$tag) &&
         echo "Installed $CLI_NAME v$tag to $SAMLI_HOME_DIR complete ✅" ||
         echo "Instalation failed ! 🛑"
 }
 
 # Main script logic
-# check_installed
-# check_sam
-# check_docker
+check_installed
+check_sam
+check_docker
 
 install
