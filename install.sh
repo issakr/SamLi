@@ -1,12 +1,19 @@
 #!/bin/bash
 
+SILENT=false
+
 # Define constants for your CLI
 CLI_NAME="samli"
 
 # script_pwd=$(pwd)/bin
 SAMLI_HOME_DIR="$HOME/$CLI_NAME" # or any other preferred installation directory
 
-check_timefonds() {
+debug() {
+    if [ ! -n $SILENT ]; then
+        echo "$1"
+    fi
+}
+check_cli() {
     # Check if the CLI executable already exists in $PATH
     if command -v "$CLI_NAME" >/dev/null 2>&1; then
         echo "The $CLI_NAME CLI is already installed."
@@ -15,13 +22,13 @@ check_timefonds() {
 }
 # Function to display installation progress
 install_progress() {
-    echo -e "\n[INFO] $1"
+    debug -e "\n[INFO] $1"
 }
 
 # Function to check if AWS SAM is installed
 check_sam() {
     if command -v sam &>/dev/null; then
-        echo "AWS SAM is installed."
+        debug "AWS SAM is installed."
     else
         echo "AWS SAM is not installed. Please install it before continuing."
         echo $'You can install AWS SAM by following the instructions at:\n\thttps://docs.aws.amazon.com/serverless-application-model/latest/developerguide/serverless-sam-cli-install.html'
@@ -32,7 +39,7 @@ check_sam() {
 # Function to check if Docker is installed
 check_docker() {
     if command -v docker &>/dev/null; then
-        echo "Docker is installed."
+        debug "Docker is installed."
     else
         echo "Docker is not installed. Please install Docker before continuing."
         echo $'You can install Docker by following the instructions at:\n\thttps://docs.docker.com/get-docker/'
@@ -46,9 +53,9 @@ addLineToFile() {
     if ! grep -qF "$line" "$file"; then
         echo "export SAMLI_HOME_DIR=\"$SAMLI_HOME_DIR\"" >>"$file"
         echo "$line" >>"$file"
-        echo "'$file' updated"
+        debug "'$file' updated"
     else
-        echo "Line already exists in '$file'"
+        debug "Line already exists in '$file'"
     fi
 }
 addToSHELL() {
@@ -94,7 +101,7 @@ fi
 
 # Function to install the CLI
 install() {
-    echo "Installing $CLI_NAME v$tag..."
+    debug "Installing $CLI_NAME v$tag..."
 
     # Create the installation directory if it doesn't exist
     mkdir -p "$SAMLI_HOME_DIR"
@@ -104,14 +111,49 @@ install() {
         unzip -q $CLI_NAME.zip -d .) &&
         (cp -r $CLI_NAME-$tag/bin $SAMLI_HOME_DIR &&
             addToSHELL &&
-            rm -rf $CLI_NAME.zip $CLI_NAME-$tag) &&
-        echo "Installed $CLI_NAME v$tag to $SAMLI_HOME_DIR complete ✅" ||
-        echo "Instalation failed ! 🛑"
+            rm -rf $CLI_NAME.zip $CLI_NAME-$tag)
 }
 
-# Main script logic
-check_installed
-check_sam
-check_docker
+# Function to display a progress bar
+# Usage: progress_bar <current_progress> <total_progress>
+progress_bar() {
+    local current=$1
+    local total=$2
+    local maxlen=50 # Maximum length of the progress bar
+    local progress=$((current * maxlen / total))
+    local remaining=$((maxlen - progress))
 
-install
+    printf "["
+    printf "%${progress}s" | tr ' ' '='
+    printf "%${remaining}s" | tr ' ' '.'
+    printf "] %d%%" $((current * 100 / total))
+}
+
+STEPS=("check_cli" "check_sam" "check_docker" "install")
+# Example: Number of steps
+
+# Main script logic
+while [[ $# -gt 0 ]]; do
+    case $1 in
+    -s | --silent)
+        SILENT=true
+        ;;
+    # -h | --help)
+    #     cli_help
+    #     ;;
+    # -* | --*)
+    #     echo "Unknown option $1"
+    #     cli_help
+    #     ;;
+    esac
+done
+
+total_steps=${#STEPS[@]}
+for ((i = 0; i < total_steps; i++)); do
+    ${STEPS[i]} # Call the function for the current step
+    progress_bar $((i + 1)) $total_steps
+    printf "\r" # Move cursor back to the beginning of the line
+done
+
+echo "" # Move to the next line after the progress bar is complete
+echo "Installation complete!"

@@ -9,13 +9,6 @@ cli_name="${0##*/}"
 # Source a common library file from the specified location
 source "$CLI_WORKDIR/lib/common"
 
-# # Set the project path to the current working directory
-# PROJECT_PATH=$(pwd)
-PROJECT_PATH="$TFONDS/time-value-account/cdk"
-HANDLERS_PATH="src/handler"
-APPNAME="tf-backend"
-CDK_FOLDER_NAME="cdk.out"
-
 if check_for_new_release; then
     echo $'please use:\tsamLi update'
 fi
@@ -26,20 +19,26 @@ cli_help() {
     exit 1
 }
 
+debug() {
+    if [ ! -n $DEBUG ]; then
+        echo "$1"
+    fi
+}
+
 # Function to print detailed usage information
 cli_usage() {
     COMMANDS=$(ls) # This should probably be changed to COMMANDS=$(ls)
     echo "
-Usage: $cli_name [--env <TEST_ENV> -e <EVENT_PATH> -l <LOCAL_ENV_PATH>] <functionName>
+Usage: $cli_name [OPTIONS] --env <TEST_ENV> <functionName>
 
 Available options:
         --env,      environment's name
-   -d | --debug,    debug features
-   -h | --help,     for help
-Optional options:
+   -c | --config,   config file (YAML)
    -e | --event,    event's path from the function's folder. (JSON)
    -l | --local,    local environments variables's path from the project's folder. (JSON)
    -n | --no-build, skip building the template
+   -d | --debug,    debug features
+   -h | --help,     for help
 "
 }
 
@@ -50,6 +49,10 @@ DEBUG_FLAG=""
 # Loop through command-line arguments
 while [[ $# -gt 0 ]]; do
     case $1 in
+    -c | --config)
+        CONFIG_PATH="$2"
+        shift 2 # skip both the argument and its value
+        ;;
     -l | --local)
         LOCAL_ENV_PATH="$2"
         shift 2 # skip both the argument and its value
@@ -86,6 +89,18 @@ done
 
 # Restore positional parameters
 set -- "${POSITIONAL_ARGS[@]}"
+
+if [ -z "$CONFIG_PATH" ]; then
+    if [ ! -e "$(pwd)/.samli-config.yaml" ]; then
+        echo "Error: <CONFIG_PATH> is required."
+        cli_usage
+        read -p "Enter the config path: " CONFIG_PATH
+    else
+        CONFIG_PATH="$(pwd)/.sam-config.yaml"
+    fi
+fi
+
+readConfigFile $CONFIG_PATH
 
 # Check if a function name is provided
 if [[ -n $1 ]]; then
@@ -162,7 +177,7 @@ else
     LAMBDA_STACKNAME="$LAMBDA_NAME"
 fi
 
-CDK_TEMPLATE_NAME="$APPNAME-$TEST_ENV.template.json"
+CDK_TEMPLATE_NAME="$CDK_APPNAME-$TEST_ENV.template.json"
 
 CDK_FOLDER_PATH="$PROJECT_PATH/$CDK_FOLDER_NAME"
 CDK_TEMPLATE_PATH="$CDK_FOLDER_NAME/$CDK_TEMPLATE_NAME"
