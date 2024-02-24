@@ -1,0 +1,14 @@
+{
+    "branches": [
+        "master"
+    ],
+    "repositoryUrl": "https://github.com/issakr/SamLi.git",
+    "plugins": [
+        [
+            "@semantic-release/npm",
+            {
+                "npmPublish": false
+            }
+        ]
+    ]
+}
