@@ -46,7 +46,7 @@ done
 # Restore positional parameters
 set -- "${POSITIONAL_ARGS[@]}"
 
-update() {
+update_scipt() {
     ./bin/commands/uninstall -y &&
         curl -sSL "$INSTALL_URL" | bash
 
@@ -54,12 +54,12 @@ update() {
 
 update() {
     if [ "$force" = true ]; then
-        update
+        update_scipt
     else
-        read -p "Are you sure you want to update the tool? (y/n) " choice
+        read -p "Are you sure you want to update the tool? (Y/n) " choice
         case "$choice" in
         y | Y)
-            update
+            update_scipt
             ;;
         *)
             echo "Uninstallation cancelled"
