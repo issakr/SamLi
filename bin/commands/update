@@ -70,6 +70,5 @@ update() {
 
 if check_for_new_release; then
     echo "Updating..."
-
     update
 fi

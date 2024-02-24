@@ -77,3 +77,29 @@ check_for_new_release() {
         return $NO_UPDATED_NEEDED
     fi
 }
+
+function readConfigFile() {
+    CONFIG_FILE_PATH="$SYS_CONFIG_DIR/$CONFIG_FILE_NAME"
+    if [ -n $1 ]; then
+        CONFIG_FILE_PATH=$1
+    fi
+
+    if test -f "$CONFIG_FILE_PATH"; then
+        debug "Reading config from $CONFIG_FILE_PATH"
+
+        config=$(yq e $CONFIG_FILE_PATH)
+        export HANDLERS_PATH=$(yq e '.HANDLERS_PATH' $CONFIG_FILE_PATH)
+        export PROJECT_PATH=$(yq e '.PROJECT_PATH' $CONFIG_FILE_PATH)
+        export CDK_APPNAME=$(yq e '.CDK_APPNAME' $CONFIG_FILE_PATH)
+        export CDK_FOLDER_NAME=$(yq e '.CDK_FOLDER_NAME' $CONFIG_FILE_PATH)
+
+        # # Use config values in script
+        debug "CDK_FOLDER_NAME: $CDK_FOLDER_NAME"
+        debug "HANDLERS_PATH: $HANDLERS_PATH"
+        debug "PROJECT_PATH: $PROJECT_PATH"
+        debug "CDK_APPNAME: $CDK_APPNAME"
+    else
+        echo "Config file not found in $CONFIG_FILE_PATH"
+    fi
+
+}
