@@ -113,7 +113,7 @@ force_uninstall() {
         read -p "Are you sure you want to uninstall the tool? (y/N) " choice
         case "$choice" in
         y | Y)
-            uninstall && echo "$CLI_NAME v$tag uninstalled ✅"
+            uninstall && echo "$CLI_NAME v$tag successfully uninstalled ✅"
             ;;
         *)
             echo "Uninstallation cancelled"

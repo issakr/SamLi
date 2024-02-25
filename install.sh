@@ -96,12 +96,13 @@ addToSHELL() {
 if [[ -n $1 ]]; then
     tag=$1
 else
+    # https://github.com/issakr/SamLi/blob/v0.0.3/bin/VERSION
     tag=$(curl -sSL "https://raw.githubusercontent.com/issakr/SamLi/master/bin/VERSION")
 fi
 
 # Function to install the CLI
 install() {
-    debug "Installing $CLI_NAME v$tag..."
+    echo "Installing $CLI_NAME v$tag..."
 
     # Create the installation directory if it doesn't exist
     mkdir -p "$SAMLI_HOME_DIR"
@@ -156,4 +157,4 @@ for ((i = 0; i < total_steps; i++)); do
 done
 
 echo "" # Move to the next line after the progress bar is complete
-echo "${cli_name} $tag Installed ✅"
+echo "$CLI_NAME v$tag successfully installed ✅"
