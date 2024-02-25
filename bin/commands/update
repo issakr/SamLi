@@ -47,7 +47,7 @@ done
 set -- "${POSITIONAL_ARGS[@]}"
 
 update_scipt() {
-    ./uninstall -y &&
+    samLi uninstall -y &&
         curl -sSL "$INSTALL_URL" | bash
 }
 
