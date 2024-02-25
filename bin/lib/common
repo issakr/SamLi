@@ -79,7 +79,6 @@ check_for_new_release() {
 }
 
 function readConfigFile() {
-    CONFIG_FILE_PATH="$SYS_CONFIG_DIR/$CONFIG_FILE_NAME"
     if [ -n $1 ]; then
         CONFIG_FILE_PATH=$1
     fi

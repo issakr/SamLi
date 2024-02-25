@@ -49,7 +49,6 @@ set -- "${POSITIONAL_ARGS[@]}"
 update_scipt() {
     ./bin/commands/uninstall -y &&
         curl -sSL "$INSTALL_URL" | bash
-
 }
 
 update() {

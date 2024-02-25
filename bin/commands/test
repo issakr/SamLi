@@ -89,14 +89,16 @@ done
 
 # Restore positional parameters
 set -- "${POSITIONAL_ARGS[@]}"
+CONFIG_FILE_NAME=".samliconfig.yaml"
+CONFIG_FILE_PATH="$CLI_WORKDIR/$CONFIG_FILE_NAME"
 
 if [ -z "$CONFIG_PATH" ]; then
-    if [ ! -e "$(pwd)/.samli-config.yaml" ]; then
+    if [ ! -e "$CONFIG_FILE_PATH" ]; then
         echo "Error: <CONFIG_PATH> is required."
         cli_usage
         read -p "Enter the config path: " CONFIG_PATH
     else
-        CONFIG_PATH="$(pwd)/.sam-config.yaml"
+        CONFIG_PATH=$CONFIG_FILE_PATH
     fi
 fi
 
