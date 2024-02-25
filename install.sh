@@ -156,4 +156,4 @@ for ((i = 0; i < total_steps; i++)); do
 done
 
 echo "" # Move to the next line after the progress bar is complete
-echo "${cli_name} $(cat ./bin/VERSION) Installed ✅"
+echo "${cli_name} $tag Installed ✅"
