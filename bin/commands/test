@@ -90,7 +90,7 @@ done
 # Restore positional parameters
 set -- "${POSITIONAL_ARGS[@]}"
 CONFIG_FILE_NAME=".samliconfig.yaml"
-CONFIG_FILE_PATH="$CLI_WORKDIR/$CONFIG_FILE_NAME"
+CONFIG_FILE_PATH="$CONFIG_FILE_NAME"
 
 if [ -z "$CONFIG_PATH" ]; then
     if [ ! -e "$CONFIG_FILE_PATH" ]; then
